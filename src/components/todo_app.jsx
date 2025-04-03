@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import CheckIcon from "@mui/icons-material/Check";
 import DeleteIcon from "@mui/icons-material/Delete";
 import "../assets/styles/TodoApplication.css";
@@ -6,28 +6,40 @@ import "../assets/styles/TodoApplication.css";
 function TodoApplication() {
   // STATE MANAGEMENT
   const [todoText, setTodoText] = useState("");
-  const [todos, setTodos] = useState([]);
+  const [todos, setTodos] = useState(() => {
+    const cachedData = localStorage.getItem("todoItem");
+    return cachedData ? JSON.parse(cachedData) : [];
+  });
+
+  useEffect(() => {
+    localStorage.setItem("todoItem", JSON.stringify(todos));
+  }, [todos]);
 
   // FORM SUBMISSION
   const handleSubmit = (e) => {
     e.preventDefault();
     if (todoText.trim().length > 3) {
-       let isHadTodoText =  todos.find( (findTodo)=> findTodo.todoValue == todoText)
-       if(!isHadTodoText){
+      let isHadTodoText = todos.some(
+        (findTodo) => findTodo.todoValue == todoText
+      );
+      if (!isHadTodoText) {
         setTodos((prevTodos) => [
-            ...prevTodos,
-            { todoId: crypto.randomUUID(), todoValue: todoText, completed: false },
-          ]);
-          setTodoText("");
-       }else{
-        alert("this todo already created")
+          ...prevTodos,
+          {
+            todoId: crypto.randomUUID(),
+            todoValue: todoText,
+            completed: false,
+          },
+        ]);
         setTodoText("");
-       }
-        }else{
-            alert("minimum 4 characters required")
-        }
+      } else {
+        alert("this todo already created");
+        setTodoText("");
+      }
+    } else {
+      alert("minimum 4 characters required");
     }
-  
+  };
 
   // TOGGLE CHECK
   const handleCheck = (todoId) => {
@@ -60,8 +72,8 @@ function TodoApplication() {
       </form>
       <div className="todos_container">
         <ul>
-          {todos.map((todo) => (
-            <li key={todo.todoId} className="todoList">
+          {todos.map((todo, index) => (
+            <li key={index} className="todoList">
               <CheckIcon
                 role="button"
                 aria-label="check button"
